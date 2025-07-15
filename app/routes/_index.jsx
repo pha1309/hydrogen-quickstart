@@ -1,7 +1,7 @@
-import {Await, useLoaderData, Link} from 'react-router';
+import {Await, useLoaderData} from 'react-router';
 import {Suspense} from 'react';
-import {Image} from '@shopify/hydrogen';
 import {ProductItem} from '~/components/ProductItem';
+import Slider from '~/components/Slider';
 
 /**
  * @type {MetaFunction}
@@ -29,13 +29,12 @@ export async function loader(args) {
  * @param {LoaderFunctionArgs}
  */
 async function loadCriticalData({context}) {
-  const [{collections}] = await Promise.all([
-    context.storefront.query(FEATURED_COLLECTION_QUERY),
-    // Add other queries here, so that they are loaded in parallel
+  const [{metaobjects}] = await Promise.all([
+    context.storefront.query(SLIDESHOW_QUERY),
   ]);
 
   return {
-    featuredCollection: collections.nodes[0],
+    slideshows: metaobjects?.nodes || [],
   };
 }
 
@@ -62,34 +61,12 @@ function loadDeferredData({context}) {
 export default function Homepage() {
   /** @type {LoaderReturnData} */
   const data = useLoaderData();
+
   return (
     <div className="home">
-      <FeaturedCollection collection={data.featuredCollection} />
+      <Slider slideshows={data.slideshows} />
       <RecommendedProducts products={data.recommendedProducts} />
     </div>
-  );
-}
-
-/**
- * @param {{
- *   collection: FeaturedCollectionFragment;
- * }}
- */
-function FeaturedCollection({collection}) {
-  if (!collection) return null;
-  const image = collection?.image;
-  return (
-    <Link
-      className="featured-collection"
-      to={`/collections/${collection.handle}`}
-    >
-      {image && (
-        <div className="featured-collection-image">
-          <Image data={image} sizes="100vw" />
-        </div>
-      )}
-      <h1>{collection.title}</h1>
-    </Link>
   );
 }
 
@@ -120,24 +97,25 @@ function RecommendedProducts({products}) {
   );
 }
 
-const FEATURED_COLLECTION_QUERY = `#graphql
-  fragment FeaturedCollection on Collection {
-    id
-    title
-    image {
-      id
-      url
-      altText
-      width
-      height
-    }
-    handle
-  }
-  query FeaturedCollection($country: CountryCode, $language: LanguageCode)
-    @inContext(country: $country, language: $language) {
-    collections(first: 1, sortKey: UPDATED_AT, reverse: true) {
+const SLIDESHOW_QUERY = `#graphql
+  query Slideshows($first: Int = 10) {
+    metaobjects(first: $first, type: "slideshow") {
       nodes {
-        ...FeaturedCollection
+        id
+        handle
+        fields {
+          key
+          reference {
+            ... on MediaImage {
+              image {
+                url
+                altText
+                width
+                height
+              }
+            }
+          }
+        }
       }
     }
   }
