@@ -1,10 +1,10 @@
-import {useLoaderData} from 'react-router';
 import {Swiper, SwiperSlide} from 'swiper/react';
 import {Autoplay, Pagination} from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
 
 function Slider({slideshows}) {
+  if (slideshows.length === 0) return null;
   return (
     <Swiper
       autoplay={{
@@ -27,6 +27,7 @@ function Slider({slideshows}) {
               width={slide.fields[0].reference.image.width}
               height={slide.fields[0].reference.image.height}
               loading={index === 0 ? 'eager' : 'lazy'}
+              sizes="100vw"
             />
           </div>
         </SwiperSlide>

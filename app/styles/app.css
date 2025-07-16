@@ -1,9 +1,41 @@
 @import 'tailwindcss';
 
 @theme {
+  --breakpoint-xs: 30rem;
+
+  --brand-color: #282a55;
+
   --header-height: 70px;
   --banner-padding: calc(100vh - var(--header-height));
-  --brand-color: #282a55;
+}
+
+@layer base {
+  p {
+    font-size: var(--text-base);
+    color: var(--color-gray-500);
+  }
+
+  h1 {
+    font-size: var(--text-5xl); /* 3rem (48px) */
+    line-height: var(--text-5xl--line-height); /* 1 */
+    font-weight: var(--font-weight-bold);
+  }
+
+  h2 {
+    font-size: var(--text-3xl); /* 1.875rem (30px) */
+    line-height: var(--text-3xl--line-height); /* calc(2.25 / 1.875) */
+    font-weight: var(--font-weight-bold);
+  }
+
+  h3 {
+    font-size: var(--text-xl); /* 1.25rem (20px) */
+    line-height: var(--text-xl--line-height); /* calc(1.75 / 1.25) */
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .container {
+    padding: 0 1rem;
+  }
 }
 
 .swiper .swiper-pagination-bullet-active {

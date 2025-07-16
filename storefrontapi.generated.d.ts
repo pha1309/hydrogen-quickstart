@@ -320,6 +320,22 @@ export type SlideshowsQuery = {
   };
 };
 
+export type CollectionsQueryVariables = StorefrontAPI.Exact<{
+  first?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Int']['input']>;
+}>;
+
+export type CollectionsQuery = {
+  collections: {
+    edges: Array<{
+      node: Pick<StorefrontAPI.Collection, 'handle' | 'title'> & {
+        image?: StorefrontAPI.Maybe<
+          Pick<StorefrontAPI.Image, 'altText' | 'width' | 'height' | 'url'>
+        >;
+      };
+    }>;
+  };
+};
+
 export type ArticleQueryVariables = StorefrontAPI.Exact<{
   articleHandle: StorefrontAPI.Scalars['String']['input'];
   blogHandle: StorefrontAPI.Scalars['String']['input'];
@@ -1159,6 +1175,10 @@ interface GeneratedQueryTypes {
   '#graphql\n  query Slideshows($first: Int = 10) {\n    metaobjects(first: $first, type: "slideshow") {\n      nodes {\n        id\n        handle\n        fields {\n          key\n          reference {\n            ... on MediaImage {\n              image {\n                url\n                altText\n                width\n                height\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n': {
     return: SlideshowsQuery;
     variables: SlideshowsQueryVariables;
+  };
+  '#graphql\n  query Collections($first: Int = 4) {\n    collections(first: $first) {\n      edges {\n        node {\n          handle\n          title\n          image {\n            altText\n            width\n            height\n            url\n          }\n        }\n      }\n    }\n  }\n': {
+    return: CollectionsQuery;
+    variables: CollectionsQueryVariables;
   };
   '#graphql\n  query Article(\n    $articleHandle: String!\n    $blogHandle: String!\n    $country: CountryCode\n    $language: LanguageCode\n  ) @inContext(language: $language, country: $country) {\n    blog(handle: $blogHandle) {\n      handle\n      articleByHandle(handle: $articleHandle) {\n        handle\n        title\n        contentHtml\n        publishedAt\n        author: authorV2 {\n          name\n        }\n        image {\n          id\n          altText\n          url\n          width\n          height\n        }\n        seo {\n          description\n          title\n        }\n      }\n    }\n  }\n': {
     return: ArticleQuery;

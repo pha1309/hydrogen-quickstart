@@ -1,5 +1,6 @@
 import {useLoaderData} from 'react-router';
 import Slider from '~/components/Slider';
+import Collections from '~/components/Collections';
 
 /**
  * @type {MetaFunction}
@@ -27,12 +28,14 @@ export async function loader(args) {
  * @param {LoaderFunctionArgs}
  */
 async function loadCriticalData({context}) {
-  const [{metaobjects}] = await Promise.all([
+  const [metaobjectsRes, collectionsRes] = await Promise.all([
     context.storefront.query(SLIDESHOW_QUERY),
+    context.storefront.query(COLLECTIONS_QUERY),
   ]);
 
   return {
-    slideshows: metaobjects?.nodes || [],
+    slideshows: metaobjectsRes?.metaobjects?.nodes || [],
+    collections: collectionsRes?.collections?.edges || [],
   };
 }
 
@@ -53,6 +56,7 @@ export default function Homepage() {
   return (
     <div className="home">
       <Slider slideshows={data.slideshows} />
+      <Collections collections={data.collections} />
     </div>
   );
 }
@@ -74,6 +78,25 @@ const SLIDESHOW_QUERY = `#graphql
                 height
               }
             }
+          }
+        }
+      }
+    }
+  }
+`;
+
+const COLLECTIONS_QUERY = `#graphql
+  query Collections($first: Int = 4) {
+    collections(first: $first) {
+      edges {
+        node {
+          handle
+          title
+          image {
+            altText
+            width
+            height
+            url
           }
         }
       }
