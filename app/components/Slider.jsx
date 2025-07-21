@@ -1,3 +1,5 @@
+import {Image} from '@shopify/hydrogen';
+
 import {Swiper, SwiperSlide} from 'swiper/react';
 import {Autoplay, Pagination} from 'swiper/modules';
 import 'swiper/css';
@@ -20,10 +22,10 @@ function Slider({slideshows}) {
       {slideshows.map((slide, index) => (
         <SwiperSlide key={slide.handle}>
           <div className="pb-(--banner-padding) relative overflow-hidden">
-            <img
+            <Image
               className="w-full h-full object-cover absolute top-0 left-0 z-0"
               src={slide.fields[0].reference.image.url}
-              alt={slide.fields[0].reference.image.altText}
+              alt={slide.fields[0].reference.image.altText ?? ''}
               width={slide.fields[0].reference.image.width}
               height={slide.fields[0].reference.image.height}
               loading={index === 0 ? 'eager' : 'lazy'}

@@ -1,6 +1,7 @@
 import {useLoaderData} from 'react-router';
 import Slider from '~/components/Slider';
 import Collections from '~/components/Collections';
+import Products from '~/components/Products';
 
 /**
  * @type {MetaFunction}
@@ -28,14 +29,16 @@ export async function loader(args) {
  * @param {LoaderFunctionArgs}
  */
 async function loadCriticalData({context}) {
-  const [metaobjectsRes, collectionsRes] = await Promise.all([
+  const [metaobjectsRes, collectionsRes, productsRes] = await Promise.all([
     context.storefront.query(SLIDESHOW_QUERY),
     context.storefront.query(COLLECTIONS_QUERY),
+    context.storefront.query(PRODUCTS_QUERY),
   ]);
 
   return {
     slideshows: metaobjectsRes?.metaobjects?.nodes || [],
-    collections: collectionsRes?.collections?.edges || [],
+    collections: collectionsRes?.collections?.nodes || [],
+    products: productsRes?.collection?.products?.nodes || [],
   };
 }
 
@@ -57,6 +60,7 @@ export default function Homepage() {
     <div className="home">
       <Slider slideshows={data.slideshows} />
       <Collections collections={data.collections} />
+      <Products products={data.products} />
     </div>
   );
 }
@@ -88,20 +92,121 @@ const SLIDESHOW_QUERY = `#graphql
 const COLLECTIONS_QUERY = `#graphql
   query Collections($first: Int = 4) {
     collections(first: $first) {
-      edges {
-        node {
+      nodes {
+        handle
+        title
+        image {
+          altText
+          width
+          height
+          url
+        }
+      }
+    }
+  }
+`;
+
+const IMAGE_FIELDS_FRAGMENT = `#graphql
+fragment ImageFields on Image {
+    id
+    altText
+    height
+    width
+    url
+  }
+`;
+
+const PRODUCTS_QUERY = `#graphql
+  query Products($handle: String = "frontpage", $first: Int = 4) {
+    collection(handle: $handle) {
+      products(first: $first) {
+        nodes {
           handle
+          id
           title
-          image {
-            altText
-            width
-            height
-            url
+          description
+          featuredImage {
+            ...ImageFields
+          }
+          images(first: 3) {
+            nodes {
+              ...ImageFields
+            }
+          }
+          priceRange {
+            maxVariantPrice {
+              amount
+              currencyCode
+            }
+            minVariantPrice {
+              amount
+              currencyCode
+            }
+          }
+          options(first: 3) {
+            id
+            name
+            optionValues {
+              name
+              id
+              firstSelectableVariant {
+                availableForSale
+                id
+                selectedOptions {
+                  name
+                  value
+                }
+              }
+            }
+          }
+          variants(first: 10) {
+            nodes {
+              id
+              title
+              selectedOptions {
+                name
+                value
+              }
+              availableForSale
+              compareAtPrice {
+                amount
+                currencyCode
+              }
+              price {
+                amount
+                currencyCode
+              }
+            }
+          }
+          adjacentVariants {
+            availableForSale
+            id
+            selectedOptions {
+              name
+              value
+            }
+          }
+          selectedOrFirstAvailableVariant {
+            id
+            availableForSale
+            selectedOptions {
+              name
+              value
+            }
+            price {
+              amount
+              currencyCode
+            }
+            compareAtPrice {
+              amount
+              currencyCode
+            }
           }
         }
       }
     }
   }
+  ${IMAGE_FIELDS_FRAGMENT}
 `;
 
 /** @typedef {import('@shopify/remix-oxygen').LoaderFunctionArgs} LoaderFunctionArgs */

@@ -3,7 +3,9 @@
 @theme {
   --breakpoint-xs: 30rem;
 
-  --brand-color: #282a55;
+  --color-brand: #58806b;
+  --color-brand-light: #f5f3f5;
+  --color-brand-dark: #1e3b2c;
 
   --header-height: 70px;
   --banner-padding: calc(100vh - var(--header-height));
@@ -38,8 +40,35 @@
   }
 }
 
+@layer components {
+  .button {
+    @apply w-auto h-auto border py-2 px-4 rounded-md cursor-pointer transition-colors duration-300;
+  }
+
+  .button-primary {
+    @apply bg-brand border-brand text-brand-light hover:bg-brand-dark;
+  }
+
+  .button-secondary {
+    @apply bg-brand-dark border-brand-dark text-brand-light hover:bg-brand-light hover:text-brand-dark;
+  }
+
+  .button-outline {
+    @apply text-brand border-brand hover:bg-brand hover:text-brand-light;
+  }
+  .button-large {
+    @apply w-full py-4 uppercase tracking-wide font-semibold;
+  }
+
+  .popup {
+    @apply fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-lg z-50 overflow-auto;
+    width: calc(100vw - 2rem);
+    max-height: calc(100vh - 2rem);
+  }
+}
+
 .swiper .swiper-pagination-bullet-active {
-  background-color: var(--brand-color);
+  background-color: var(--color-brand);
 }
 
 :root {

@@ -1,4 +1,5 @@
 import {Link} from 'react-router';
+import {Image} from '@shopify/hydrogen';
 
 function Collections({collections}) {
   if (collections.length === 0) return null;
@@ -12,20 +13,22 @@ function Collections({collections}) {
       <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-4">
         {collections.map((collection) => (
           <Link
-            to={`/collections/${collection.node.handle}`}
-            key={collection.node.handle}
+            to={`/collections/${collection.handle}`}
+            key={collection.handle}
           >
-            <div className="relative">
-              <img
-                className="w-full h-auto"
-                src={collection.node.image.url}
-                alt={collection.node.image.altText || collection.node.title}
-                loading="lazy"
-                width={collection.node.image.width}
-                height={collection.node.image.height}
-              />
-            </div>
-            <h3 className="mt-2 text-center">{collection.node.title}</h3>
+            {collection.image && (
+              <div className="relative">
+                <Image
+                  className="w-full h-auto"
+                  src={collection.image.url}
+                  alt={collection.image.altText || collection.title}
+                  loading="lazy"
+                  width={collection.image.width}
+                  height={collection.image.height}
+                />
+              </div>
+            )}
+            <h3 className="mt-2 text-center">{collection.title}</h3>
           </Link>
         ))}
       </div>
