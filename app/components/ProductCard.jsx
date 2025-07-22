@@ -13,7 +13,7 @@ function ProductCard({product}) {
   };
 
   return (
-    <div>
+    <div className="flex flex-col">
       <div className="relative group">
         <Link to={`/products/${product.handle}`}>
           <Image
@@ -37,7 +37,7 @@ function ProductCard({product}) {
           </button>
         </div>
       </div>
-      <div className="bg-brand-light px-4 py-2">
+      <div className="bg-brand-light px-4 py-2 flex-1">
         <h3>
           <Link to={`/products/${product.handle}`}>{product.title}</Link>
         </h3>

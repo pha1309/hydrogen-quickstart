@@ -94,7 +94,12 @@ function MainProduct({product, onCloseQuickView}) {
           inputs={
             currentVariant
               ? {
-                  lines: [{merchandiseId: currentVariant.id, quantity: 1}],
+                  lines: [
+                    {
+                      merchandiseId: currentVariant.id,
+                      quantity: 1,
+                    },
+                  ],
                 }
               : {}
           }
@@ -102,10 +107,8 @@ function MainProduct({product, onCloseQuickView}) {
           {(fetcher) => {
             // Handle successful form submission
             if (fetcher.data && fetcher.state === 'loading') {
-              setTimeout(() => {
-                if (onCloseQuickView) onCloseQuickView();
-                open('cart');
-              }, 100);
+              if (onCloseQuickView) onCloseQuickView();
+              open('cart');
             }
 
             return (
