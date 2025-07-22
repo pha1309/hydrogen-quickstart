@@ -59,6 +59,13 @@ function ProductCard({product}) {
             className="fixed inset-0 bg-black/50 z-50 cursor-pointer"
             onClick={() => setShowQuickView(false)}
             aria-label="Close modal"
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                setShowQuickView(false);
+              }
+            }}
           ></div>
           <div
             className="popup"
@@ -68,7 +75,7 @@ function ProductCard({product}) {
           >
             <div className="flex justify-end mb-4">
               <button
-                className="button w-10 h-10 rounded-full p-0 font-bold"
+                className="button button-primary w-10 h-10 rounded-full p-0 font-bold"
                 onClick={() => setShowQuickView(false)}
                 aria-label="Close quick view"
                 type="button"
@@ -76,7 +83,10 @@ function ProductCard({product}) {
                 x
               </button>
             </div>
-            <MainProduct product={product} />
+            <MainProduct
+              product={product}
+              onCloseQuickView={() => setShowQuickView(false)}
+            />
           </div>
         </>
       )}

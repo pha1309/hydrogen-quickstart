@@ -295,6 +295,11 @@ export type StoreRobotsQueryVariables = StorefrontAPI.Exact<{
 
 export type StoreRobotsQuery = {shop: Pick<StorefrontAPI.Shop, 'id'>};
 
+export type ImageFieldsFragment = Pick<
+  StorefrontAPI.Image,
+  'id' | 'altText' | 'height' | 'width' | 'url'
+>;
+
 export type SlideshowsQueryVariables = StorefrontAPI.Exact<{
   first?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Int']['input']>;
 }>;
@@ -309,7 +314,7 @@ export type SlideshowsQuery = {
               image?: StorefrontAPI.Maybe<
                 Pick<
                   StorefrontAPI.Image,
-                  'url' | 'altText' | 'width' | 'height'
+                  'id' | 'altText' | 'height' | 'width' | 'url'
                 >
               >;
             }>;
@@ -329,17 +334,15 @@ export type CollectionsQuery = {
     nodes: Array<
       Pick<StorefrontAPI.Collection, 'handle' | 'title'> & {
         image?: StorefrontAPI.Maybe<
-          Pick<StorefrontAPI.Image, 'altText' | 'width' | 'height' | 'url'>
+          Pick<
+            StorefrontAPI.Image,
+            'id' | 'altText' | 'height' | 'width' | 'url'
+          >
         >;
       }
     >;
   };
 };
-
-export type ImageFieldsFragment = Pick<
-  StorefrontAPI.Image,
-  'id' | 'altText' | 'height' | 'width' | 'url'
->;
 
 export type ProductsQueryVariables = StorefrontAPI.Exact<{
   handle?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['String']['input']>;
@@ -1272,11 +1275,11 @@ interface GeneratedQueryTypes {
     return: StoreRobotsQuery;
     variables: StoreRobotsQueryVariables;
   };
-  '#graphql\n  query Slideshows($first: Int = 10) {\n    metaobjects(first: $first, type: "slideshow") {\n      nodes {\n        id\n        handle\n        fields {\n          key\n          reference {\n            ... on MediaImage {\n              image {\n                url\n                altText\n                width\n                height\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n': {
+  '#graphql\n  query Slideshows($first: Int = 10) {\n    metaobjects(first: $first, type: "slideshow") {\n      nodes {\n        id\n        handle\n        fields {\n          key\n          reference {\n            ... on MediaImage {\n              image {\n                ...ImageFields\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n  #graphql\nfragment ImageFields on Image {\n    id\n    altText\n    height\n    width\n    url\n  }\n\n': {
     return: SlideshowsQuery;
     variables: SlideshowsQueryVariables;
   };
-  '#graphql\n  query Collections($first: Int = 4) {\n    collections(first: $first) {\n      nodes {\n        handle\n        title\n        image {\n          altText\n          width\n          height\n          url\n        }\n      }\n    }\n  }\n': {
+  '#graphql\n  query Collections($first: Int = 4) {\n    collections(first: $first) {\n      nodes {\n        handle\n        title\n        image {\n          ...ImageFields\n        }\n      }\n    }\n  }\n  #graphql\nfragment ImageFields on Image {\n    id\n    altText\n    height\n    width\n    url\n  }\n\n': {
     return: CollectionsQuery;
     variables: CollectionsQueryVariables;
   };

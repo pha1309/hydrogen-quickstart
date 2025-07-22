@@ -1,7 +1,7 @@
 import {useLoaderData} from 'react-router';
 import Slider from '~/components/Slider';
 import Collections from '~/components/Collections';
-import Products from '~/components/Products';
+import ListProducts from '~/components/ListProducts';
 
 /**
  * @type {MetaFunction}
@@ -29,16 +29,25 @@ export async function loader(args) {
  * @param {LoaderFunctionArgs}
  */
 async function loadCriticalData({context}) {
-  const [metaobjectsRes, collectionsRes, productsRes] = await Promise.all([
+  const [slideshowRes, collectionsRes, productsRes] = await Promise.allSettled([
     context.storefront.query(SLIDESHOW_QUERY),
     context.storefront.query(COLLECTIONS_QUERY),
     context.storefront.query(PRODUCTS_QUERY),
   ]);
 
   return {
-    slideshows: metaobjectsRes?.metaobjects?.nodes || [],
-    collections: collectionsRes?.collections?.nodes || [],
-    products: productsRes?.collection?.products?.nodes || [],
+    slideshows:
+      slideshowRes.status === 'fulfilled'
+        ? slideshowRes.value?.metaobjects?.nodes || []
+        : [],
+    collections:
+      collectionsRes.status === 'fulfilled'
+        ? collectionsRes.value?.collections?.nodes || []
+        : [],
+    products:
+      productsRes.status === 'fulfilled'
+        ? productsRes.value?.collection?.products?.nodes || []
+        : [],
   };
 }
 
@@ -60,10 +69,20 @@ export default function Homepage() {
     <div className="home">
       <Slider slideshows={data.slideshows} />
       <Collections collections={data.collections} />
-      <Products products={data.products} />
+      <ListProducts products={data.products} />
     </div>
   );
 }
+
+const IMAGE_FIELDS_FRAGMENT = `#graphql
+fragment ImageFields on Image {
+    id
+    altText
+    height
+    width
+    url
+  }
+`;
 
 const SLIDESHOW_QUERY = `#graphql
   query Slideshows($first: Int = 10) {
@@ -76,10 +95,7 @@ const SLIDESHOW_QUERY = `#graphql
           reference {
             ... on MediaImage {
               image {
-                url
-                altText
-                width
-                height
+                ...ImageFields
               }
             }
           }
@@ -87,6 +103,7 @@ const SLIDESHOW_QUERY = `#graphql
       }
     }
   }
+  ${IMAGE_FIELDS_FRAGMENT}
 `;
 
 const COLLECTIONS_QUERY = `#graphql
@@ -96,24 +113,12 @@ const COLLECTIONS_QUERY = `#graphql
         handle
         title
         image {
-          altText
-          width
-          height
-          url
+          ...ImageFields
         }
       }
     }
   }
-`;
-
-const IMAGE_FIELDS_FRAGMENT = `#graphql
-fragment ImageFields on Image {
-    id
-    altText
-    height
-    width
-    url
-  }
+  ${IMAGE_FIELDS_FRAGMENT}
 `;
 
 const PRODUCTS_QUERY = `#graphql

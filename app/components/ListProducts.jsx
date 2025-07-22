@@ -1,7 +1,7 @@
 import ProductCard from './ProductCard';
 import PropTypes from 'prop-types';
 
-function Products({products = []}) {
+function ListProducts({products = []}) {
   if (products.length === 0) return null;
   return (
     <div className="container mx-auto my-10">
@@ -15,8 +15,13 @@ function Products({products = []}) {
   );
 }
 
-Products.propTypes = {
-  products: PropTypes.arrayOf(PropTypes.object),
+ListProducts.propTypes = {
+  products: PropTypes.arrayOf(
+    PropTypes.shape({
+      handle: PropTypes.string.isRequired,
+      // Add other expected product properties here
+    }),
+  ),
 };
 
-export default Products;
+export default ListProducts;
