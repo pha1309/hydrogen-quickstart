@@ -8,7 +8,7 @@ function ListProducts({products = []}) {
       <h2 className="text-center mb-8">Our Products</h2>
       <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-4">
         {products.map((product) => (
-          <ProductCard key={product.handle} product={product} />
+          <ProductCard key={product.id} product={product} />
         ))}
       </div>
     </div>
@@ -18,8 +18,7 @@ function ListProducts({products = []}) {
 ListProducts.propTypes = {
   products: PropTypes.arrayOf(
     PropTypes.shape({
-      handle: PropTypes.string.isRequired,
-      // Add other expected product properties here
+      id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
     }),
   ),
 };

@@ -3,14 +3,11 @@ import {
   getSelectedProductOptions,
   Analytics,
   useOptimisticVariant,
-  getProductOptions,
   getAdjacentAndFirstAvailableVariants,
   useSelectedOptionInUrlParam,
 } from '@shopify/hydrogen';
-import {ProductPrice} from '~/components/ProductPrice';
-import {ProductImage} from '~/components/ProductImage';
-import {ProductForm} from '~/components/ProductForm';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
+import MainProduct from '~/components/MainProduct';
 
 /**
  * @type {MetaFunction<typeof loader>}
@@ -97,44 +94,16 @@ export default function Product() {
   // only when no search params are set in the url
   useSelectedOptionInUrlParam(selectedVariant.selectedOptions);
 
-  // Get the product options array
-  const productOptions = getProductOptions({
-    ...product,
-    selectedOrFirstAvailableVariant: selectedVariant,
-  });
-
-  const {title, descriptionHtml} = product;
-
   return (
-    <div className="product">
-      <ProductImage image={selectedVariant?.image} />
-      <div className="product-main">
-        <h1>{title}</h1>
-        <ProductPrice
-          price={selectedVariant?.price}
-          compareAtPrice={selectedVariant?.compareAtPrice}
-        />
-        <br />
-        <ProductForm
-          productOptions={productOptions}
-          selectedVariant={selectedVariant}
-        />
-        <br />
-        <br />
-        <p>
-          <strong>Description</strong>
-        </p>
-        <br />
-        <div dangerouslySetInnerHTML={{__html: descriptionHtml}} />
-        <br />
-      </div>
+    <div className="container mx-auto">
+      <MainProduct product={product} />
       <Analytics.ProductView
         data={{
           products: [
             {
               id: product.id,
               title: product.title,
-              price: selectedVariant?.price.amount || '0',
+              price: selectedVariant?.price?.amount || '0',
               vendor: product.vendor,
               variantId: selectedVariant?.id || '',
               variantTitle: selectedVariant?.title || '',
@@ -147,39 +116,26 @@ export default function Product() {
   );
 }
 
-const PRODUCT_VARIANT_FRAGMENT = `#graphql
-  fragment ProductVariant on ProductVariant {
-    availableForSale
-    compareAtPrice {
-      amount
-      currencyCode
-    }
+const PRODUCT_ITEM_FRAGMENT = `#graphql
+  fragment ImageFields on Image {
     id
-    image {
-      __typename
-      id
-      url
-      altText
-      width
-      height
-    }
-    price {
-      amount
-      currencyCode
-    }
-    product {
-      title
-      handle
-    }
+    altText
+    height
+    width
+    url
+  }
+
+  fragment MoneyProductItem on MoneyV2 {
+    amount
+    currencyCode
+  }
+
+  fragment SelectedVariantFields on ProductVariant {
+    id
+    availableForSale
     selectedOptions {
       name
       value
-    }
-    sku
-    title
-    unitPrice {
-      amount
-      currencyCode
     }
   }
 `;
@@ -187,42 +143,92 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
 const PRODUCT_FRAGMENT = `#graphql
   fragment Product on Product {
     id
-    title
-    vendor
     handle
-    descriptionHtml
+    title
     description
-    encodedVariantExistence
+    vendor
+    featuredImage {
+      ...ImageFields
+    }
+    images(first: 3) {
+      nodes {
+        ...ImageFields
+      }
+    }
+    priceRange {
+      maxVariantPrice {
+        ...MoneyProductItem
+      }
+      minVariantPrice {
+        ...MoneyProductItem
+      }
+    }
     encodedVariantAvailability
-    options {
+    encodedVariantExistence
+    options(first: 3) {
+      id
       name
       optionValues {
+        id
         name
         firstSelectableVariant {
-          ...ProductVariant
-        }
-        swatch {
-          color
-          image {
-            previewImage {
-              url
-            }
+          ...SelectedVariantFields
+          product {
+            handle
           }
         }
       }
     }
-    selectedOrFirstAvailableVariant(selectedOptions: $selectedOptions, ignoreUnknownOptions: true, caseInsensitiveMatch: true) {
-      ...ProductVariant
+    variants(first: 10) {
+      nodes {
+        ...SelectedVariantFields
+        title
+        image {
+          ...ImageFields
+        }
+        compareAtPrice {
+          ...MoneyProductItem
+        }
+        price {
+          ...MoneyProductItem
+        }
+        unitPrice {
+          ...MoneyProductItem
+        }
+        product {
+          handle
+        }
+      }
     }
-    adjacentVariants (selectedOptions: $selectedOptions) {
-      ...ProductVariant
+    adjacentVariants(selectedOptions: $selectedOptions) {
+      ...SelectedVariantFields
+      price {
+        ...MoneyProductItem
+      }
+      product {
+        handle
+      }
+    }
+    selectedOrFirstAvailableVariant(selectedOptions: $selectedOptions, ignoreUnknownOptions: true, caseInsensitiveMatch: true) {
+      title
+      product {
+        title
+        handle
+      }
+      ...SelectedVariantFields
+      price {
+        ...MoneyProductItem
+      }
+      compareAtPrice {
+        ...MoneyProductItem
+      }
     }
     seo {
       description
       title
     }
   }
-  ${PRODUCT_VARIANT_FRAGMENT}
+  ${PRODUCT_ITEM_FRAGMENT}
 `;
 
 const PRODUCT_QUERY = `#graphql

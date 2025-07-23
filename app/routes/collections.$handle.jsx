@@ -1,9 +1,10 @@
 import {redirect} from '@shopify/remix-oxygen';
 import {useLoaderData} from 'react-router';
+import {useState} from 'react';
 import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
-import {ProductItem} from '~/components/ProductItem';
+import ProductCard from '~/components/ProductCard';
 
 /**
  * @type {MetaFunction<typeof loader>}
@@ -75,56 +76,128 @@ function loadDeferredData({context}) {
 export default function Collection() {
   /** @type {LoaderReturnData} */
   const {collection} = useLoaderData();
+  const [fullDescription, setFullDescription] = useState(false);
 
   return (
-    <div className="collection">
-      <h1>{collection.title}</h1>
-      <p className="collection-description">{collection.description}</p>
-      <PaginatedResourceSection
-        connection={collection.products}
-        resourcesClassName="products-grid"
-      >
-        {({node: product, index}) => (
-          <ProductItem
-            key={product.id}
-            product={product}
-            loading={index < 8 ? 'eager' : undefined}
-          />
-        )}
-      </PaginatedResourceSection>
-      <Analytics.CollectionView
-        data={{
-          collection: {
-            id: collection.id,
-            handle: collection.handle,
-          },
-        }}
-      />
+    <div className="container mx-auto my-10">
+      <div className="collection">
+        <h1 className="text-center mb-8">{collection.title}</h1>
+        <div className="my-8">
+          {fullDescription
+            ? collection.description
+            : collection.description.length > 300
+              ? collection.description.slice(0, 300) + '...'
+              : collection.description}
+
+          {collection.description.length > 300 && (
+            <button
+              className="underline underline-offset-3 block cursor-pointer my-4"
+              onClick={() => setFullDescription(!fullDescription)}
+            >
+              {fullDescription ? 'Read less' : 'Read more'}
+            </button>
+          )}
+        </div>
+        <PaginatedResourceSection
+          connection={collection.products}
+          resourcesClassName="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-4"
+        >
+          {({node: product}) => (
+            <ProductCard key={product.id} product={product} />
+          )}
+        </PaginatedResourceSection>
+        <Analytics.CollectionView
+          data={{
+            collection: {
+              id: collection.id,
+              handle: collection.handle,
+            },
+          }}
+        />
+      </div>
     </div>
   );
 }
 
 const PRODUCT_ITEM_FRAGMENT = `#graphql
+  fragment ImageFields on Image {
+    id
+    altText
+    height
+    width
+    url
+  }
+
   fragment MoneyProductItem on MoneyV2 {
     amount
     currencyCode
   }
+
+  fragment SelectedVariantFields on ProductVariant {
+    id
+    availableForSale
+    selectedOptions {
+      name
+      value
+    }
+  }
+
   fragment ProductItem on Product {
     id
     handle
     title
+    description
     featuredImage {
-      id
-      altText
-      url
-      width
-      height
+      ...ImageFields
+    }
+    images(first: 3) {
+      nodes {
+        ...ImageFields
+      }
     }
     priceRange {
+      maxVariantPrice {
+        ...MoneyProductItem
+      }
       minVariantPrice {
         ...MoneyProductItem
       }
-      maxVariantPrice {
+    }
+    options(first: 3) {
+      id
+      name
+      optionValues {
+        id
+        name
+        firstSelectableVariant {
+          ...SelectedVariantFields
+        }
+      }
+    }
+    variants(first: 10) {
+      nodes {
+        ...SelectedVariantFields
+        title
+        image {
+          ...ImageFields
+        }
+        compareAtPrice {
+          ...MoneyProductItem
+        }
+        price {
+          ...MoneyProductItem
+        }
+      }
+    }
+    adjacentVariants {
+      ...SelectedVariantFields
+    }
+    selectedOrFirstAvailableVariant {
+      ...SelectedVariantFields
+      price {
+        ...MoneyProductItem
+      }
+      compareAtPrice {
         ...MoneyProductItem
       }
     }

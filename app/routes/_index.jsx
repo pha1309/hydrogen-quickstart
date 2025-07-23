@@ -75,12 +75,28 @@ export default function Homepage() {
 }
 
 const IMAGE_FIELDS_FRAGMENT = `#graphql
-fragment ImageFields on Image {
+  fragment ImageFields on Image {
     id
     altText
     height
     width
     url
+  }
+`;
+
+const PRODUCT_ITEM_FRAGMENT = `#graphql
+  fragment MoneyProductItem on MoneyV2 {
+    amount
+    currencyCode
+  }
+
+  fragment SelectedVariantFields on ProductVariant {
+    id
+    availableForSale
+    selectedOptions {
+      name
+      value
+    }
   }
 `;
 
@@ -126,8 +142,8 @@ const PRODUCTS_QUERY = `#graphql
     collection(handle: $handle) {
       products(first: $first) {
         nodes {
-          handle
           id
+          handle
           title
           description
           featuredImage {
@@ -140,71 +156,64 @@ const PRODUCTS_QUERY = `#graphql
           }
           priceRange {
             maxVariantPrice {
-              amount
-              currencyCode
+              ...MoneyProductItem
             }
             minVariantPrice {
-              amount
-              currencyCode
+              ...MoneyProductItem
             }
           }
+          encodedVariantAvailability
+          encodedVariantExistence
           options(first: 3) {
             id
             name
             optionValues {
-              name
               id
+              name
               firstSelectableVariant {
-                availableForSale
-                id
-                selectedOptions {
-                  name
-                  value
+                ...SelectedVariantFields
+                product {
+                  handle
                 }
               }
             }
           }
           variants(first: 10) {
             nodes {
-              id
+              ...SelectedVariantFields
               title
-              selectedOptions {
-                name
-                value
+              image {
+                ...ImageFields
               }
-              availableForSale
               compareAtPrice {
-                amount
-                currencyCode
+                ...MoneyProductItem
               }
               price {
-                amount
-                currencyCode
+                ...MoneyProductItem
+              }
+              product {
+                handle
               }
             }
           }
           adjacentVariants {
-            availableForSale
-            id
-            selectedOptions {
-              name
-              value
+            ...SelectedVariantFields
+            product {
+              handle
             }
           }
           selectedOrFirstAvailableVariant {
-            id
-            availableForSale
-            selectedOptions {
-              name
-              value
+            title
+            product {
+              title
+              handle
             }
+            ...SelectedVariantFields
             price {
-              amount
-              currencyCode
+              ...MoneyProductItem
             }
             compareAtPrice {
-              amount
-              currencyCode
+              ...MoneyProductItem
             }
           }
         }
@@ -212,6 +221,7 @@ const PRODUCTS_QUERY = `#graphql
     }
   }
   ${IMAGE_FIELDS_FRAGMENT}
+  ${PRODUCT_ITEM_FRAGMENT}
 `;
 
 /** @typedef {import('@shopify/remix-oxygen').LoaderFunctionArgs} LoaderFunctionArgs */

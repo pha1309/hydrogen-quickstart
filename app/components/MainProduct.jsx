@@ -1,11 +1,21 @@
-import {Image, Money, CartForm} from '@shopify/hydrogen';
+import {
+  Image,
+  Money,
+  CartForm,
+  getProductOptions,
+  useOptimisticVariant,
+  getAdjacentAndFirstAvailableVariants,
+} from '@shopify/hydrogen';
 import {useState} from 'react';
 import PropTypes from 'prop-types';
 import {useAside} from './Aside';
+import {useNavigate} from 'react-router';
 
 function MainProduct({product, onCloseQuickView}) {
+  const navigate = useNavigate();
   const {open} = useAside();
   const variants = product.variants?.nodes || [];
+
   const [optionSelected, setOptionSelected] = useState(() => {
     if (!product.selectedOrFirstAvailableVariant?.selectedOptions) {
       return [];
@@ -15,6 +25,7 @@ function MainProduct({product, onCloseQuickView}) {
       (option) => option.value,
     );
   });
+
   const currentVariant =
     variants.find(
       (variant) =>
@@ -26,26 +37,48 @@ function MainProduct({product, onCloseQuickView}) {
     variants[0] ||
     null;
 
+  const productOptions = getProductOptions(product);
+
+  const variantImage = currentVariant?.image?.id
+    ? currentVariant.image
+    : product.images?.nodes?.[0];
+
   if (!product) {
     return <div>Product not found</div>;
   }
   return (
     <div className="grid grid-cols-1 xs:grid-cols-2 gap-4">
       <div className="flex flex-wrap">
+        {variantImage && (
+          <div className="w-full">
+            <Image
+              className="w-full h-auto"
+              src={variantImage.url}
+              alt={variantImage.altText || product.title}
+              width={variantImage.width}
+              height={variantImage.height}
+              loading="eager"
+              sizes="(min-width: 45em) 50vw, 100vw"
+            />
+          </div>
+        )}
         {product.images?.nodes &&
-          product.images.nodes.map((image, index) => (
-            <div className={index === 0 ? 'w-full' : 'w-1/2'} key={image.id}>
-              <Image
-                className="w-full h-auto"
-                src={image.url}
-                alt={image.altText || product.title}
-                width={image.width}
-                height={image.height}
-                loading={index === 0 ? 'eager' : 'lazy'}
-                sizes="(min-width: 45em) 50vw, 100vw"
-              />
-            </div>
-          ))}
+          product.images.nodes.map(
+            (image) =>
+              image.id !== variantImage.id && (
+                <div className="w-1/2" key={image.id}>
+                  <Image
+                    className="w-full h-auto"
+                    src={image.url}
+                    alt={image.altText || product.title}
+                    width={image.width}
+                    height={image.height}
+                    loading="lazy"
+                    sizes="(min-width: 45em) 50vw, 100vw"
+                  />
+                </div>
+              ),
+          )}
       </div>
       <div>
         <h1 className="mb-2">{product.title}</h1>
@@ -57,34 +90,54 @@ function MainProduct({product, onCloseQuickView}) {
         {product.description && (
           <div className="mb-2">{product.description}</div>
         )}
-        {product.options?.length > 0 && variants.length > 1 && (
+        {productOptions.length > 0 && variants.length > 1 && (
           <div className="my-4 pt-4 border-t border-brand-light">
-            {product.options.map((option, index) => (
-              <div key={option.id}>
-                <div className="mb-2">{option.name}</div>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {option.optionValues?.map((value) => (
-                    <button
-                      key={value.id}
-                      className={
-                        optionSelected[index] === value.name
-                          ? 'button button-primary'
-                          : 'button button-outline'
-                      }
-                      onClick={() =>
+            {productOptions.map((option, index) =>
+              option.optionValues.length > 1 ? (
+                <div key={option.id}>
+                  <div className="mb-2">{option.name}</div>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {option.optionValues?.map((value) => {
+                      const {variantUriQuery, selected} = value;
+                      const handleOptionChange = () => {
+                        // Update the option selected
                         setOptionSelected((prev) => {
                           const newOptionSelected = [...prev];
                           newOptionSelected[index] = value.name;
                           return newOptionSelected;
-                        })
-                      }
-                    >
-                      {value.name}
-                    </button>
-                  )) || null}
+                        });
+                        if (!onCloseQuickView) {
+                          // Is product page, navigate to the variant
+                          if (!selected) {
+                            try {
+                              navigate(`?${variantUriQuery}`, {
+                                replace: true,
+                                preventScrollReset: true,
+                              });
+                            } catch (error) {
+                              console.error('Navigation failed:', error);
+                            }
+                          }
+                        }
+                      };
+                      return (
+                        <button
+                          key={value.id}
+                          className={
+                            optionSelected[index] === value.name
+                              ? 'button button-primary'
+                              : 'button button-outline'
+                          }
+                          onClick={handleOptionChange}
+                        >
+                          {value.name}
+                        </button>
+                      );
+                    }) || null}
+                  </div>
                 </div>
-              </div>
-            )) || null}
+              ) : null,
+            )}
           </div>
         )}
 
